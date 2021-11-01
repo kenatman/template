@@ -3,19 +3,37 @@ const HtmlWebpackPlugin = require(`html-webpack-plugin`);
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { BundleAnalyzerPlugin } = require(`webpack-bundle-analyzer`);
+const webpack = require(`webpack`);
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-module.exports = {
+const config = {
   resolve: { extensions: [`.js`, `.jsx`] },
   mode: isDevelopment ? `development` : `production`,
   devtool: isDevelopment ? `eval` : `hidden-source-map`,
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          chunks: "initial",
+          test: "vendor",
+          name: "vendor",
+          enforce: true,
+        },
+      },
+    },
+  },
   entry: { main: `./src/index` },
   module: {
     rules: [
       {
         test: /\.(c|sc|sa)ss$/,
-        use: [MiniCssExtractPlugin.loader, `css-loader`, `sass-loader`],
+        use: [
+          !isDevelopment ? MiniCssExtractPlugin.loader : `style-loader`,
+          `css-loader`,
+          `sass-loader`,
+        ],
       },
       {
         test: /\.(js|jsx)$/,
@@ -24,10 +42,17 @@ module.exports = {
           loader: `babel-loader`,
           options: {
             presets: [`@babel/preset-env`, `@babel/preset-react`],
-            plugins: [
-              `@babel/plugin-proposal-class-properties`,
-              `react-refresh/babel`,
-            ],
+            env: {
+              development: {
+                plugins: [
+                  `@babel/plugin-proposal-class-properties`,
+                  `react-refresh/babel`,
+                ],
+              },
+              production: {
+                plugins: [`@babel/plugin-proposal-class-properties`],
+              },
+            },
           },
         },
       },
@@ -44,14 +69,16 @@ module.exports = {
       },
     ],
   },
+  // dev, prod 공통 플러그인
   plugins: [
-    new ReactRefreshWebpackPlugin(),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: isDevelopment ? `development` : `production`,
+    }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       filename: `index.html`,
       template: `./public/index.html`,
     }),
-    new MiniCssExtractPlugin({ filename: `css/styles.css` }),
   ],
   output: {
     path: path.resolve(__dirname, `dist`),
@@ -66,3 +93,18 @@ module.exports = {
     port: 3000,
   },
 };
+
+// dev모드 플러그인 추가
+if (isDevelopment && config.plugins) {
+  config.plugins.push(new ReactRefreshWebpackPlugin());
+}
+
+// prod모드 플러그인 추가
+if (!isDevelopment && config.plugins) {
+  /* config.plugins.push(
+    new BundleAnalyzerPlugin({ analyzerMode: `server`, openAnalyzer: true })
+  ); */
+  config.plugins.push(new MiniCssExtractPlugin({ filename: `css/styles.css` }));
+}
+
+module.exports = config;

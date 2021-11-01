@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --progress --mode development --open --hot",
+    "start": "cross-env webpack serve --env development --open",
     "prebuild": "rimraf dist",
-    "build": "webpack --progress --mode production"
+    "build": "cross-env NODE_ENV=production webpack"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +29,7 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
     "babel-loader": "^8.2.3",
     "clean-webpack-plugin": "^4.0.0",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.5.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
@@ -40,6 +41,7 @@
     "style-loader": "^3.3.1",
     "url-loader": "^4.1.1",
     "webpack": "^5.61.0",
+    "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.4.0"
   }
